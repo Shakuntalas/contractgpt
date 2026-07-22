@@ -15,7 +15,7 @@ function Chat() {
   return (
     <div className="min-h-screen bg-slate-100">
 
-      <div className="grid lg:grid-cols-4 h-screen">
+      <div className="grid lg:grid-cols-4 min-h-screen">
 
         {/* Sidebar */}
 
