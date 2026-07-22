@@ -8,7 +8,7 @@ async-timeout==4.0.3
 attrs==26.1.0
 bcrypt==5.0.0
 build==1.4.4
-certifi==2026.6.17
+certifi==2026.7.22
 cffi==2.0.0
 charset-normalizer==3.4.9
 chromadb==1.5.9
@@ -24,7 +24,7 @@ filetype==1.2.0
 flatbuffers==25.12.19
 frozenlist==1.8.0
 fsspec==2025.10.0
-google-ai-generativelanguage==0.11.0
+google-ai-generativelanguage==0.6.15
 google-api-core==2.30.3
 google-api-python-client==2.198.0
 google-auth==2.50.0
@@ -54,7 +54,7 @@ langchain==0.3.30
 langchain-chroma==0.2.6
 langchain-community==0.3.31
 langchain-core==0.3.86
-langchain-google-genai==2.1.12
+langchain-google-genai==2.0.10
 langchain-text-splitters==0.3.11
 langsmith==0.4.37
 markdown-it-py==3.0.0
