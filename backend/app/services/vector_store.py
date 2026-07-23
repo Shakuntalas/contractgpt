@@ -6,7 +6,7 @@ from app.config import GOOGLE_API_KEY
 
 PERSIST_DIR = "vectorstore"
 
-EMBED_MODEL = os.getenv("GEMINI_EMBED_MODEL", "models/text-embedding-004")
+EMBED_MODEL = os.getenv("GEMINI_EMBED_MODEL", "models/gemini-embedding-001")
 
 embeddings = GoogleGenerativeAIEmbeddings(
     model=EMBED_MODEL,
