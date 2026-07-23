@@ -1,3 +1,4 @@
+import os
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_chroma import Chroma
 
@@ -5,8 +6,10 @@ from app.config import GOOGLE_API_KEY
 
 PERSIST_DIR = "vectorstore"
 
+EMBED_MODEL = os.getenv("GEMINI_EMBED_MODEL", "models/text-embedding-004")
+
 embeddings = GoogleGenerativeAIEmbeddings(
-    model="models/gemini-embedding-001",
+    model=EMBED_MODEL,
     google_api_key=GOOGLE_API_KEY,
 )
 

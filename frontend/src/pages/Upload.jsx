@@ -1,114 +1,47 @@
+import { motion } from "framer-motion";
+import { FaRobot, FaShieldAlt, FaFileContract } from "react-icons/fa";
 import UploadSection from "../components/UploadSection";
-import {
-  FaCloudUploadAlt,
-  FaFileContract,
-  FaShieldAlt,
-  FaRobot,
-} from "react-icons/fa";
+import GlassCard from "../components/ui/GlassCard";
 
 function Upload() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-blue-50 to-indigo-100 py-16 px-8">
-
-      <div className="max-w-7xl mx-auto">
-
-        {/* Header */}
-
-        <div className="text-center mb-16">
-
-          <div className="flex justify-center mb-6">
-            <FaCloudUploadAlt className="text-7xl text-blue-600" />
-          </div>
-
-          <h1 className="text-5xl font-extrabold text-gray-900">
-            Upload Your Contract
+    <div className="page-content min-h-screen py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center mb-12"
+        >
+          <h1 className="text-4xl sm:text-5xl font-bold mb-4">
+            Upload Your <span className="neon-text">Contract</span>
           </h1>
-
-          <p className="text-gray-600 text-lg mt-5 max-w-3xl mx-auto">
-            Upload your legal document and let ContractGPT analyze,
-            summarize, and identify important clauses using AI.
+          <p className="text-slate-400 max-w-2xl mx-auto">
+            Drop your PDF and our AI will embed, analyze, and prepare it for chat and summary.
           </p>
+        </motion.div>
 
-        </div>
-
-        {/* Main Content */}
-
-        <div className="grid lg:grid-cols-3 gap-10">
-
-          {/* Upload Area */}
-
+        <div className="grid lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
-
-            <div className="bg-white rounded-3xl shadow-xl p-8">
-
+            <GlassCard className="p-8" hover={false}>
               <UploadSection />
-
-            </div>
-
+            </GlassCard>
           </div>
 
-          {/* Information Panel */}
-
-          <div className="space-y-6">
-
-            <div className="bg-white rounded-3xl shadow-lg p-8">
-
-              <FaRobot className="text-5xl text-blue-600 mb-5" />
-
-              <h2 className="text-2xl font-bold mb-3">
-                AI Analysis
-              </h2>
-
-              <p className="text-gray-600 leading-7">
-                Our AI reviews contracts, highlights important clauses,
-                summarizes content, and detects potential risks.
-              </p>
-
-            </div>
-
-            <div className="bg-white rounded-3xl shadow-lg p-8">
-
-              <FaShieldAlt className="text-5xl text-green-600 mb-5" />
-
-              <h2 className="text-2xl font-bold mb-3">
-                Secure Upload
-              </h2>
-
-              <p className="text-gray-600 leading-7">
-                Your uploaded documents are processed securely and
-                remain private throughout the analysis.
-              </p>
-
-            </div>
-
-            <div className="bg-white rounded-3xl shadow-lg p-8">
-
-              <FaFileContract className="text-5xl text-indigo-600 mb-5" />
-
-              <h2 className="text-2xl font-bold mb-3">
-                Supported Files
-              </h2>
-
-              <ul className="space-y-3 text-gray-600">
-
-                <li>✅ PDF Documents</li>
-
-                <li>✅ DOCX Files</li>
-
-                <li>✅ TXT Files</li>
-
-                <li>✅ Up to 20 MB</li>
-
-              </ul>
-
-            </div>
-
+          <div className="space-y-4">
+            {[
+              { icon: FaRobot, title: "AI Analysis", desc: "Gemini AI reviews clauses, highlights risks, and generates summaries.", color: "text-indigo-400" },
+              { icon: FaShieldAlt, title: "Secure Processing", desc: "Documents processed on your server. Private and secure.", color: "text-emerald-400" },
+              { icon: FaFileContract, title: "PDF Support", desc: "Upload PDF contracts up to 20 MB for instant analysis.", color: "text-violet-400" },
+            ].map(({ icon: Icon, title, desc, color }) => (
+              <GlassCard key={title} className="p-5">
+                <Icon className={`text-2xl ${color} mb-3`} />
+                <h3 className="font-semibold text-white mb-1">{title}</h3>
+                <p className="text-slate-400 text-sm">{desc}</p>
+              </GlassCard>
+            ))}
           </div>
-
         </div>
-
       </div>
-
     </div>
   );
 }

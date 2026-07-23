@@ -1,207 +1,150 @@
+import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 import {
-  FaFileContract,
-  FaExclamationTriangle,
-  FaCheckCircle,
-  FaRobot,
+  FaFileContract, FaComments, FaFileAlt, FaExclamationTriangle,
+  FaUpload, FaRobot, FaArrowRight,
 } from "react-icons/fa";
-
 import {
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Legend,
+  ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip,
+  PieChart, Pie, Cell, CartesianGrid,
 } from "recharts";
+import { useApp } from "../context/AppContext";
+import GlassCard from "../components/ui/GlassCard";
 
-const pieData = [
-  { name: "Safe", value: 70 },
-  { name: "Medium", value: 20 },
-  { name: "High", value: 10 },
-];
-
-const barData = [
-  { month: "Jan", contracts: 8 },
-  { month: "Feb", contracts: 12 },
-  { month: "Mar", contracts: 18 },
-  { month: "Apr", contracts: 24 },
-  { month: "May", contracts: 20 },
-  { month: "Jun", contracts: 28 },
-];
-
-const COLORS = ["#22c55e", "#facc15", "#ef4444"];
+const COLORS = ["#6366f1", "#8b5cf6", "#06b6d4", "#10b981"];
 
 function Dashboard() {
-  const stats = [
-    {
-      title: "Contracts",
-      value: "24",
-      icon: <FaFileContract className="text-4xl text-blue-600" />,
-      bg: "bg-blue-50",
-    },
-    {
-      title: "Risk Clauses",
-      value: "12",
-      icon: <FaExclamationTriangle className="text-4xl text-red-500" />,
-      bg: "bg-red-50",
-    },
-    {
-      title: "Safe Clauses",
-      value: "86",
-      icon: <FaCheckCircle className="text-4xl text-green-500" />,
-      bg: "bg-green-50",
-    },
-    {
-      title: "AI Accuracy",
-      value: "99%",
-      icon: <FaRobot className="text-4xl text-indigo-600" />,
-      bg: "bg-indigo-50",
-    },
+  const { stats, contracts } = useApp();
+
+  const pieData = [
+    { name: "Uploaded", value: stats.contractsUploaded || 0 },
+    { name: "Questions", value: stats.questionsAsked || 0 },
+    { name: "Summaries", value: stats.summariesGenerated || 0 },
+  ].filter((d) => d.value > 0);
+
+  const barData = contracts.slice(0, 6).map((c, i) => ({
+    name: c.original_filename?.slice(0, 12) || `Doc ${i + 1}`,
+    pages: c.total_pages || c.total_chunks || 0,
+  }));
+
+  const statCards = [
+    { title: "Contracts Uploaded", value: stats.contractsUploaded || 0, icon: FaFileContract, color: "text-indigo-400" },
+    { title: "Questions Asked", value: stats.questionsAsked || 0, icon: FaComments, color: "text-violet-400" },
+    { title: "Summaries Generated", value: stats.summariesGenerated || 0, icon: FaFileAlt, color: "text-cyan-400" },
+    { title: "Active Contracts", value: contracts.length, icon: FaRobot, color: "text-emerald-400" },
+  ];
+
+  const quickActions = [
+    { to: "/upload", label: "Upload Contract", icon: FaUpload },
+    { to: "/chat", label: "AI Chat", icon: FaComments },
+    { to: "/summary", label: "View Summary", icon: FaFileAlt },
   ];
 
   return (
-    <div className="min-h-screen bg-slate-100 p-8">
+    <div className="page-content min-h-screen py-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+          <h1 className="text-4xl font-bold mb-2">Dashboard</h1>
+          <p className="text-slate-400 mb-8">Your AI contract analytics at a glance.</p>
 
-      <h1 className="text-5xl font-bold mb-3">
-        Dashboard
-      </h1>
-
-      <p className="text-gray-600 mb-10">
-        Welcome back! Here's your AI contract analytics.
-      </p>
-
-      {/* Statistics */}
-
-      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-10">
-
-        {stats.map((item, index) => (
-          <div
-            key={index}
-            className={`${item.bg} rounded-3xl shadow-lg p-8`}
-          >
-            <div className="flex justify-between items-center">
-
-              <div>
-                <p className="text-gray-500">
-                  {item.title}
-                </p>
-
-                <h2 className="text-4xl font-bold mt-2">
-                  {item.value}
-                </h2>
-              </div>
-
-              {item.icon}
-
-            </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            {statCards.map(({ title, value, icon: Icon, color }) => (
+              <GlassCard key={title} className="p-6">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="text-slate-500 text-sm">{title}</p>
+                    <p className="text-3xl font-bold text-white mt-1">{value}</p>
+                  </div>
+                  <Icon className={`text-3xl ${color}`} />
+                </div>
+              </GlassCard>
+            ))}
           </div>
-        ))}
 
-      </div>
+          <div className="grid lg:grid-cols-2 gap-6 mb-8">
+            <GlassCard className="p-6" hover={false}>
+              <h2 className="text-lg font-semibold mb-4 text-white">Activity Overview</h2>
+              {pieData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={260}>
+                  <PieChart>
+                    <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90} label>
+                      {pieData.map((_, i) => (
+                        <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip contentStyle={{ background: "#1e1b4b", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8 }} />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <p className="text-slate-500 text-center py-12">Upload a contract to see activity data.</p>
+              )}
+            </GlassCard>
 
-      {/* Charts */}
+            <GlassCard className="p-6" hover={false}>
+              <h2 className="text-lg font-semibold mb-4 text-white">Document Sizes</h2>
+              {barData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={260}>
+                  <BarChart data={barData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                    <XAxis dataKey="name" tick={{ fill: "#94a3b8", fontSize: 11 }} />
+                    <YAxis tick={{ fill: "#94a3b8", fontSize: 11 }} />
+                    <Tooltip contentStyle={{ background: "#1e1b4b", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8 }} />
+                    <Bar dataKey="pages" fill="#6366f1" radius={[6, 6, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <p className="text-slate-500 text-center py-12">No documents yet.</p>
+              )}
+            </GlassCard>
+          </div>
 
-      <div className="grid lg:grid-cols-2 gap-8 mb-10">
+          <div className="grid lg:grid-cols-3 gap-6">
+            <GlassCard className="p-6 lg:col-span-2" hover={false}>
+              <h2 className="text-lg font-semibold mb-4 text-white">Recent Contracts</h2>
+              {contracts.length === 0 ? (
+                <div className="text-center py-8">
+                  <FaExclamationTriangle className="text-3xl text-slate-600 mx-auto mb-3" />
+                  <p className="text-slate-500">No contracts uploaded yet.</p>
+                  <Link to="/upload" className="btn-primary mt-4 inline-flex text-sm">Upload Now</Link>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {contracts.slice(0, 5).map((c) => (
+                    <div key={c.document_id} className="flex items-center justify-between glass rounded-xl p-4">
+                      <div className="min-w-0">
+                        <p className="font-medium text-white truncate">{c.original_filename}</p>
+                        <p className="text-xs text-slate-500">
+                          {new Date(c.uploaded_at).toLocaleDateString()} · {c.total_pages || "?"} pages
+                        </p>
+                      </div>
+                      <Link to="/chat" className="text-indigo-400 hover:text-indigo-300 text-sm shrink-0 ml-4">
+                        Chat <FaArrowRight className="inline ml-1" />
+                      </Link>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </GlassCard>
 
-        {/* Pie Chart */}
-
-        <div className="bg-white rounded-3xl shadow-xl p-8">
-
-          <h2 className="text-2xl font-bold mb-6">
-            Risk Distribution
-          </h2>
-
-          <ResponsiveContainer width="100%" height={320}>
-
-            <PieChart>
-
-              <Pie
-                data={pieData}
-                dataKey="value"
-                outerRadius={110}
-                label
-              >
-                {pieData.map((entry, index) => (
-                  <Cell
-                    key={index}
-                    fill={COLORS[index]}
-                  />
+            <GlassCard className="p-6" hover={false}>
+              <h2 className="text-lg font-semibold mb-4 text-white">Quick Actions</h2>
+              <div className="space-y-3">
+                {quickActions.map(({ to, label, icon: Icon }) => (
+                  <Link
+                    key={to}
+                    to={to}
+                    className="flex items-center gap-3 glass rounded-xl p-4 hover:bg-indigo-500/10 transition text-slate-300 hover:text-white"
+                  >
+                    <Icon className="text-indigo-400" />
+                    {label}
+                    <FaArrowRight className="ml-auto text-slate-600" />
+                  </Link>
                 ))}
-              </Pie>
-
-              <Tooltip />
-              <Legend />
-
-            </PieChart>
-
-          </ResponsiveContainer>
-
-        </div>
-
-        {/* Bar Chart */}
-
-        <div className="bg-white rounded-3xl shadow-xl p-8">
-
-          <h2 className="text-2xl font-bold mb-6">
-            Monthly Contracts
-          </h2>
-
-          <ResponsiveContainer width="100%" height={320}>
-
-            <BarChart data={barData}>
-
-              <CartesianGrid strokeDasharray="3 3" />
-
-              <XAxis dataKey="month" />
-
-              <YAxis />
-
-              <Tooltip />
-
-              <Legend />
-
-              <Bar
-                dataKey="contracts"
-                fill="#2563eb"
-                radius={[8, 8, 0, 0]}
-              />
-
-            </BarChart>
-
-          </ResponsiveContainer>
-
-        </div>
-
+              </div>
+            </GlassCard>
+          </div>
+        </motion.div>
       </div>
-
-      {/* AI Summary */}
-
-      <div className="bg-white rounded-3xl shadow-xl p-8">
-
-        <h2 className="text-3xl font-bold mb-6">
-          AI Summary
-        </h2>
-
-        <p className="text-gray-700 leading-8 text-lg">
-          The latest contract analysis indicates an overall
-          <span className="font-bold text-green-600">
-            {" "}Low Risk{" "}
-          </span>
-          profile. Most clauses follow standard legal practices.
-          A few payment and termination conditions should be reviewed
-          before signing. AI confidence for this analysis is
-          <span className="font-bold text-blue-600">
-            {" "}99%
-          </span>.
-        </p>
-
-      </div>
-
     </div>
   );
 }

@@ -1,125 +1,53 @@
-import { FaFileContract, FaEye, FaDownload, FaSearch } from "react-icons/fa";
+import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import { FaFileContract, FaComments, FaFileAlt, FaClock } from "react-icons/fa";
+import { useApp } from "../context/AppContext";
+import GlassCard from "../components/ui/GlassCard";
 
 function History() {
-  const contracts = [
-    {
-      id: 1,
-      name: "Employment_Agreement.pdf",
-      risk: "Low",
-      date: "22 Jul 2026",
-    },
-    {
-      id: 2,
-      name: "Rental_Agreement.pdf",
-      risk: "Medium",
-      date: "21 Jul 2026",
-    },
-    {
-      id: 3,
-      name: "NDA.pdf",
-      risk: "High",
-      date: "20 Jul 2026",
-    },
-    {
-      id: 4,
-      name: "Internship_Letter.pdf",
-      risk: "Low",
-      date: "18 Jul 2026",
-    },
-  ];
+  const { contracts } = useApp();
 
   return (
-    <div className="min-h-screen bg-slate-100 py-10 px-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="page-content min-h-screen py-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-4xl mx-auto">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+          <h1 className="text-3xl font-bold mb-2">Contract History</h1>
+          <p className="text-slate-400 mb-8">All contracts you've uploaded and analyzed.</p>
 
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-4xl font-bold">
-              Contract History
-            </h1>
-            <p className="text-gray-500 mt-2">
-              View all previously analyzed contracts.
-            </p>
-          </div>
-
-          <div className="flex items-center border rounded-xl bg-white px-4 py-3 shadow">
-            <FaSearch className="text-gray-400 mr-3" />
-            <input
-              type="text"
-              placeholder="Search contracts..."
-              className="outline-none"
-            />
-          </div>
-        </div>
-
-        <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-
-          <table className="w-full">
-
-            <thead className="bg-blue-600 text-white">
-              <tr>
-                <th className="py-4">Contract</th>
-                <th>Date</th>
-                <th>Risk</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-
-            <tbody>
-
-              {contracts.map((contract) => (
-
-                <tr
-                  key={contract.id}
-                  className="border-b hover:bg-slate-50"
-                >
-                  <td className="py-5 px-6 flex items-center gap-3">
-                    <FaFileContract className="text-blue-600" />
-                    {contract.name}
-                  </td>
-
-                  <td>{contract.date}</td>
-
-                  <td>
-                    <span
-                      className={`px-3 py-1 rounded-full text-white ${
-                        contract.risk === "Low"
-                          ? "bg-green-500"
-                          : contract.risk === "Medium"
-                          ? "bg-yellow-500"
-                          : "bg-red-500"
-                      }`}
-                    >
-                      {contract.risk}
-                    </span>
-                  </td>
-
-                  <td>
-
-                    <div className="flex justify-center gap-4">
-
-                      <button className="text-blue-600 hover:text-blue-800">
-                        <FaEye />
-                      </button>
-
-                      <button className="text-green-600 hover:text-green-800">
-                        <FaDownload />
-                      </button>
-
+          {contracts.length === 0 ? (
+            <GlassCard className="p-12 text-center" hover={false}>
+              <FaFileContract className="text-5xl text-slate-600 mx-auto mb-4" />
+              <p className="text-slate-400 mb-4">No contracts in history yet.</p>
+              <Link to="/upload" className="btn-primary">Upload Contract</Link>
+            </GlassCard>
+          ) : (
+            <div className="space-y-3">
+              {contracts.map((c) => (
+                <GlassCard key={c.document_id} className="p-5 flex flex-wrap items-center justify-between gap-4" hover={false}>
+                  <div className="flex items-center gap-4 min-w-0">
+                    <FaFileContract className="text-2xl text-indigo-400 shrink-0" />
+                    <div className="min-w-0">
+                      <p className="font-medium text-white truncate">{c.original_filename}</p>
+                      <p className="text-xs text-slate-500 flex items-center gap-2 mt-1">
+                        <FaClock className="inline" />
+                        {new Date(c.uploaded_at).toLocaleString()}
+                        · {c.total_pages || "?"} pages
+                      </p>
                     </div>
-
-                  </td>
-
-                </tr>
-
+                  </div>
+                  <div className="flex gap-2">
+                    <Link to="/chat" className="btn-ghost text-sm py-2 flex items-center gap-1">
+                      <FaComments /> Chat
+                    </Link>
+                    <Link to="/summary" className="btn-primary text-sm py-2 flex items-center gap-1">
+                      <FaFileAlt /> Summary
+                    </Link>
+                  </div>
+                </GlassCard>
               ))}
-
-            </tbody>
-
-          </table>
-
-        </div>
-
+            </div>
+          )}
+        </motion.div>
       </div>
     </div>
   );

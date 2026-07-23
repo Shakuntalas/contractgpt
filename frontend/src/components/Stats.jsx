@@ -1,98 +1,46 @@
 import { motion } from "framer-motion";
-import {
-  FaFileContract,
-  FaRobot,
-  FaUsers,
-  FaShieldAlt,
-} from "react-icons/fa";
+import { FaFileContract, FaRobot, FaUsers, FaShieldAlt } from "react-icons/fa";
+import GlassCard from "./ui/GlassCard";
+
+const STATS = [
+  { icon: FaFileContract, value: "10K+", label: "Contracts Analyzed", color: "text-indigo-400" },
+  { icon: FaRobot, value: "99%", label: "AI Accuracy", color: "text-violet-400" },
+  { icon: FaUsers, value: "5K+", label: "Active Users", color: "text-cyan-400" },
+  { icon: FaShieldAlt, value: "24/7", label: "Secure Processing", color: "text-emerald-400" },
+];
 
 function Stats() {
-  const stats = [
-    {
-      icon: <FaFileContract className="text-5xl text-blue-600" />,
-      value: "10K+",
-      title: "Contracts Analyzed",
-    },
-    {
-      icon: <FaRobot className="text-5xl text-indigo-600" />,
-      value: "99%",
-      title: "AI Accuracy",
-    },
-    {
-      icon: <FaUsers className="text-5xl text-green-600" />,
-      value: "5K+",
-      title: "Happy Users",
-    },
-    {
-      icon: <FaShieldAlt className="text-5xl text-red-500" />,
-      value: "24/7",
-      title: "Secure Processing",
-    },
-  ];
-
   return (
-    <section className="py-24 bg-gradient-to-r from-blue-600 to-indigo-700 overflow-hidden">
-      <div className="max-w-7xl mx-auto px-8">
+    <section className="py-24 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto">
+        <GlassCard className="p-12 gradient-border" hover={false}>
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            className="text-center mb-12"
+          >
+            <h2 className="text-4xl font-bold mb-3">Trusted by Legal Teams</h2>
+            <p className="text-slate-400">Enterprise-grade AI contract analysis at your fingertips.</p>
+          </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: true }}
-          className="text-center mb-16"
-        >
-          <h2 className="text-5xl font-bold text-white">
-            Trusted by Thousands
-          </h2>
-
-          <p className="text-blue-100 text-lg mt-4">
-            Our AI platform helps users review contracts faster and smarter.
-          </p>
-        </motion.div>
-
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-
-          {stats.map((item, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, y: 80 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{
-                duration: 0.6,
-                delay: index * 0.2,
-              }}
-              whileHover={{
-                scale: 1.08,
-                rotate: 2,
-              }}
-              className="bg-white rounded-3xl p-8 text-center shadow-2xl cursor-pointer"
-            >
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            {STATS.map(({ icon: Icon, value, label, color }, i) => (
               <motion.div
-                animate={{
-                  rotate: [0, 10, -10, 0],
-                }}
-                transition={{
-                  repeat: Infinity,
-                  duration: 4,
-                }}
-                className="flex justify-center mb-5"
+                key={label}
+                initial={{ opacity: 0, scale: 0.9 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="text-center"
               >
-                {item.icon}
+                <Icon className={`text-4xl ${color} mx-auto mb-4`} />
+                <div className="text-4xl font-extrabold neon-text">{value}</div>
+                <p className="text-slate-400 mt-2">{label}</p>
               </motion.div>
-
-              <h3 className="text-5xl font-extrabold text-gray-900">
-                {item.value}
-              </h3>
-
-              <p className="text-gray-600 mt-3 text-lg">
-                {item.title}
-              </p>
-            </motion.div>
-          ))}
-
-        </div>
-
+            ))}
+          </div>
+        </GlassCard>
       </div>
     </section>
   );

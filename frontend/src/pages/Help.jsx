@@ -1,111 +1,74 @@
-import { FaQuestionCircle, FaEnvelope, FaPhone, FaBook, FaRobot } from "react-icons/fa";
+import { motion } from "framer-motion";
+import { FaQuestionCircle, FaEnvelope, FaBook, FaRobot, FaShieldAlt } from "react-icons/fa";
+import GlassCard from "../components/ui/GlassCard";
 
 function Help() {
   const faqs = [
     {
-      question: "How do I upload a contract?",
-      answer: "Go to the Upload page and select a PDF or DOCX file."
+      q: "How does ContractGPT analyze contracts?",
+      a: "ContractGPT extracts text from your uploaded PDF, creates embeddings with Google Gemini, stores them in ChromaDB, and uses Retrieval-Augmented Generation (RAG) to generate grounded summaries and answer questions."
     },
     {
-      question: "Which file types are supported?",
-      answer: "Currently PDF and DOCX files are supported."
+      q: "Which file formats and sizes are supported?",
+      a: "Currently PDF contracts up to 20 MB are supported. The system cleans header/footer artifacts and creates page-aware chunks."
     },
     {
-      question: "Is my contract secure?",
-      answer: "Yes. Uploaded contracts are processed securely and are not shared."
+      q: "Is my contract data private?",
+      a: "Yes. Documents are processed locally on your backend server and embeddings stored in ChromaDB vectorstore. Communication with Google Gemini uses encrypted HTTPS."
     },
     {
-      question: "Can I download the AI report?",
-      answer: "Yes. After analysis you can download the generated report."
+      q: "Can I export or print the AI summaries?",
+      a: "Yes! On the Summary page, you can copy text to clipboard, download as TXT or PDF, or print directly."
     }
   ];
 
   return (
-    <div className="min-h-screen bg-slate-100 py-12 px-6">
-      <div className="max-w-6xl mx-auto">
+    <div className="page-content min-h-screen py-10 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-5xl mx-auto">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+          <div className="text-center mb-12">
+            <FaRobot className="text-6xl text-indigo-400 mx-auto mb-4" />
+            <h1 className="text-4xl font-bold mb-3">Help & Support</h1>
+            <p className="text-slate-400 max-w-xl mx-auto text-sm">
+              Everything you need to know about uploading, chatting, and analyzing legal documents with ContractGPT.
+            </p>
+          </div>
 
-        <div className="text-center mb-12">
-          <FaRobot className="text-6xl text-blue-600 mx-auto mb-4" />
-          <h1 className="text-4xl font-bold">
-            Help & Support
-          </h1>
-          <p className="text-gray-500 mt-2">
-            Find answers to common questions about ContractGPT.
-          </p>
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-8">
-
-          <div className="bg-white rounded-2xl shadow-lg p-8">
-
-            <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
-              <FaQuestionCircle className="text-blue-600" />
-              Frequently Asked Questions
-            </h2>
+          <div className="grid lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2 space-y-4">
+              <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                <FaQuestionCircle className="text-indigo-400" /> Frequently Asked Questions
+              </h2>
+              {faqs.map((faq, idx) => (
+                <GlassCard key={idx} className="p-6" hover={false}>
+                  <h3 className="font-semibold text-white text-base mb-2">{faq.q}</h3>
+                  <p className="text-slate-300 text-sm leading-relaxed">{faq.a}</p>
+                </GlassCard>
+              ))}
+            </div>
 
             <div className="space-y-6">
+              <GlassCard className="p-6" hover={false}>
+                <h3 className="font-bold text-white text-lg mb-3 flex items-center gap-2">
+                  <FaEnvelope className="text-emerald-400" /> Email Support
+                </h3>
+                <p className="text-slate-400 text-sm mb-4">Questions or feedback? Send us an email.</p>
+                <a href="mailto:support@contractgpt.ai" className="text-indigo-300 hover:underline font-medium text-sm">
+                  support@contractgpt.ai
+                </a>
+              </GlassCard>
 
-              {faqs.map((faq, index) => (
-                <div key={index}>
-                  <h3 className="font-semibold text-lg">
-                    {faq.question}
-                  </h3>
-
-                  <p className="text-gray-600 mt-2">
-                    {faq.answer}
-                  </p>
-                </div>
-              ))}
-
+              <GlassCard className="p-6" hover={false}>
+                <h3 className="font-bold text-white text-lg mb-3 flex items-center gap-2">
+                  <FaBook className="text-cyan-400" /> Documentation
+                </h3>
+                <p className="text-slate-400 text-sm leading-relaxed">
+                  ContractGPT leverages LangChain, Google Gemini 1.5 Flash, and ChromaDB vector database.
+                </p>
+              </GlassCard>
             </div>
-
           </div>
-
-          <div className="space-y-6">
-
-            <div className="bg-white rounded-2xl shadow-lg p-8">
-
-              <h2 className="text-2xl font-bold mb-5 flex items-center gap-3">
-                <FaEnvelope className="text-green-600" />
-                Contact Support
-              </h2>
-
-              <p className="text-gray-600">
-                support@contractgpt.ai
-              </p>
-
-            </div>
-
-            <div className="bg-white rounded-2xl shadow-lg p-8">
-
-              <h2 className="text-2xl font-bold mb-5 flex items-center gap-3">
-                <FaPhone className="text-blue-600" />
-                Phone
-              </h2>
-
-              <p className="text-gray-600">
-                +91 9876543210
-              </p>
-
-            </div>
-
-            <div className="bg-white rounded-2xl shadow-lg p-8">
-
-              <h2 className="text-2xl font-bold mb-5 flex items-center gap-3">
-                <FaBook className="text-orange-500" />
-                Documentation
-              </h2>
-
-              <p className="text-gray-600">
-                Learn how to upload contracts, use AI chat, and understand analysis reports.
-              </p>
-
-            </div>
-
-          </div>
-
-        </div>
-
+        </motion.div>
       </div>
     </div>
   );

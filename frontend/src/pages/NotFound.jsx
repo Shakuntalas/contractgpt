@@ -1,36 +1,24 @@
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 import { FaRobot, FaHome } from "react-icons/fa";
+import GlassCard from "../components/ui/GlassCard";
 
 function NotFound() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 via-white to-indigo-100 px-6">
-
-      <div className="text-center">
-
-        <FaRobot className="text-8xl text-blue-600 mx-auto mb-6" />
-
-        <h1 className="text-8xl font-extrabold text-gray-800">
-          404
-        </h1>
-
-        <h2 className="text-3xl font-bold mt-4">
-          Page Not Found
-        </h2>
-
-        <p className="text-gray-500 mt-4 max-w-md mx-auto">
-          Sorry, the page you are looking for doesn't exist or has been moved.
-        </p>
-
-        <Link
-          to="/"
-          className="inline-flex items-center gap-3 mt-8 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-4 rounded-xl hover:from-blue-700 hover:to-indigo-700 transition"
-        >
-          <FaHome />
-          Back to Home
-        </Link>
-
-      </div>
-
+    <div className="page-content min-h-[80vh] flex items-center justify-center px-4">
+      <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
+        <GlassCard className="p-12 text-center max-w-lg" hover={false}>
+          <FaRobot className="text-7xl text-indigo-400 mx-auto mb-6" />
+          <h1 className="text-7xl font-extrabold neon-text mb-2">404</h1>
+          <h2 className="text-2xl font-bold text-white mb-3">Page Not Found</h2>
+          <p className="text-slate-400 mb-8">
+            The page you're looking for doesn't exist or has been moved.
+          </p>
+          <Link to="/" className="btn-primary inline-flex items-center gap-2">
+            <FaHome /> Back to Home
+          </Link>
+        </GlassCard>
+      </motion.div>
     </div>
   );
 }

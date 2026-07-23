@@ -1,89 +1,55 @@
+import { motion } from "framer-motion";
 import {
-  FaRobot,
-  FaFileContract,
-  FaShieldAlt,
-  FaComments,
-  FaClock,
-  FaChartLine,
+  FaRobot, FaFileContract, FaShieldAlt, FaComments,
+  FaClock, FaChartLine, FaSearch, FaBalanceScale,
 } from "react-icons/fa";
+import GlassCard from "./ui/GlassCard";
+
+const FEATURES = [
+  { icon: FaRobot, title: "AI-Powered Analysis", desc: "Gemini AI reads and understands your entire contract using advanced RAG technology.", color: "text-indigo-400" },
+  { icon: FaFileContract, title: "Smart Summaries", desc: "Executive summaries, key terms, and risky clauses extracted automatically.", color: "text-violet-400" },
+  { icon: FaShieldAlt, title: "Risk Detection", desc: "Identify hidden obligations, auto-renewals, and liability traps before signing.", color: "text-emerald-400" },
+  { icon: FaComments, title: "Chat with Contract", desc: "Ask questions in plain English and get instant, context-aware answers.", color: "text-cyan-400" },
+  { icon: FaClock, title: "Save Hours", desc: "Reduce manual legal review from hours to seconds with AI automation.", color: "text-amber-400" },
+  { icon: FaChartLine, title: "Risk Scoring", desc: "Get a 0-100 risk score with detailed breakdown of contract concerns.", color: "text-rose-400" },
+  { icon: FaSearch, title: "Clause Search", desc: "Semantic search finds relevant clauses even when wording differs.", color: "text-blue-400" },
+  { icon: FaBalanceScale, title: "Plain English", desc: "Complex legal language translated into clear, understandable terms.", color: "text-purple-400" },
+];
 
 function Features() {
-  const features = [
-    {
-      icon: <FaRobot className="text-5xl text-blue-600" />,
-      title: "AI Powered Analysis",
-      description:
-        "Automatically analyze contracts using Artificial Intelligence and identify important clauses instantly.",
-    },
-    {
-      icon: <FaFileContract className="text-5xl text-indigo-600" />,
-      title: "Smart Contract Review",
-      description:
-        "Understand lengthy contracts within seconds with AI-generated summaries and highlights.",
-    },
-    {
-      icon: <FaShieldAlt className="text-5xl text-green-600" />,
-      title: "Risk Detection",
-      description:
-        "Identify risky clauses, hidden obligations, and missing legal terms before signing.",
-    },
-    {
-      icon: <FaComments className="text-5xl text-purple-600" />,
-      title: "AI Chat Assistant",
-      description:
-        "Ask questions about your uploaded contract and receive instant AI-generated answers.",
-    },
-    {
-      icon: <FaClock className="text-5xl text-orange-500" />,
-      title: "Save Time",
-      description:
-        "Reduce hours of manual legal review into just a few seconds with AI automation.",
-    },
-    {
-      icon: <FaChartLine className="text-5xl text-red-500" />,
-      title: "Detailed Insights",
-      description:
-        "Receive confidence scores, contract summaries, and actionable insights in one dashboard.",
-    },
-  ];
-
   return (
-    <section className="py-24 bg-gradient-to-b from-white to-slate-100">
-      <div className="max-w-7xl mx-auto px-8">
-
-        <div className="text-center mb-16">
-          <h2 className="text-5xl font-bold text-gray-900">
-            Powerful AI Features
+    <section className="py-24 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="text-center mb-16"
+        >
+          <h2 className="text-4xl sm:text-5xl font-bold mb-4">
+            Everything You Need to <span className="neon-text">Review Contracts</span>
           </h2>
-
-          <p className="text-gray-600 text-lg mt-5 max-w-3xl mx-auto">
-            ContractGPT combines Artificial Intelligence with modern
-            contract analysis to help users review, summarize, and understand
-            legal documents effortlessly.
+          <p className="text-slate-400 text-lg max-w-2xl mx-auto">
+            Powered by LangChain, Gemini AI, and ChromaDB vector search for accurate, context-aware analysis.
           </p>
-        </div>
+        </motion.div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
-
-          {features.map((feature, index) => (
-            <div
-              key={index}
-              className="bg-white rounded-3xl shadow-lg p-8 hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 border border-gray-100"
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {FEATURES.map(({ icon: Icon, title, desc, color }, i) => (
+            <motion.div
+              key={title}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.08 }}
             >
-              <div className="mb-6">
-                {feature.icon}
-              </div>
-
-              <h3 className="text-2xl font-bold mb-4">
-                {feature.title}
-              </h3>
-
-              <p className="text-gray-600 leading-7">
-                {feature.description}
-              </p>
-            </div>
+              <GlassCard className="p-6 h-full">
+                <Icon className={`text-3xl ${color} mb-4`} />
+                <h3 className="text-lg font-semibold text-white mb-2">{title}</h3>
+                <p className="text-slate-400 text-sm leading-relaxed">{desc}</p>
+              </GlassCard>
+            </motion.div>
           ))}
-
         </div>
       </div>
     </section>

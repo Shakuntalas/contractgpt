@@ -1,6 +1,6 @@
 import re
 from langchain_community.document_loaders import PyPDFLoader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 
 def clean_text(text: str) -> str:
@@ -36,10 +36,13 @@ def load_and_split_pdf(file_path: str):
     """
     loader = PyPDFLoader(file_path)
     pages = loader.load()  # one Document per PDF page
+    total_pages = len(pages)
 
-    # Clean each page's text before chunking
-    for page in pages:
+    # Clean each page's text before chunking and enrich metadata
+    for i, page in enumerate(pages):
         page.page_content = clean_text(page.page_content)
+        page.metadata["total_pages"] = total_pages
+        page.metadata["page_label"] = i + 1
 
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=1000,

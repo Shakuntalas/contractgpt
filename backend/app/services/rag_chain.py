@@ -1,207 +1,273 @@
 import json
+import logging
 import re
 
 from app.services.vector_store import get_vector_store
 
-# Flag to control mock vs real mode — flip this once Gemini access is confirmed working
+logger = logging.getLogger(__name__)
+
 USE_MOCK_LLM = False
 
+DEFAULT_SUMMARY = {
+    "summary": "",
+    "key_terms": [],
+    "risky_clauses": [],
+    "payment_terms": [],
+    "obligations": [],
+    "responsibilities": [],
+    "liability": [],
+    "termination": [],
+    "renewal": [],
+    "timeline": [],
+    "risk_score": 0,
+}
 
-def get_relevant_chunks(document_id: str, question: str, k: int = 4):
-    """
-    Retrieves the top-k most relevant chunks for a question from a specific document's
-    vector store collection. Returns an empty list (instead of raising) if embedding
-    fails — e.g. while Gemini API access is not yet available.
-    """
+
+def get_relevant_chunks(document_id: str, question: str, k: int = 6):
     try:
         vector_store = get_vector_store(collection_name=document_id)
-        results = vector_store.similarity_search(question, k=k)
-        return results
+        return vector_store.similarity_search(question, k=k)
     except Exception as e:
-        print(f"[WARNING] Retrieval failed (likely Gemini API access issue): {e}")
+        logger.warning("Retrieval failed for %s: %s", document_id, e)
         return []
 
 
 def answer_question(document_id: str, question: str):
-    """
-    Runs the full RAG pipeline: retrieve relevant chunks, then generate an answer.
-    Currently mocked until Gemini access is confirmed.
-    """
     chunks = get_relevant_chunks(document_id, question)
 
     if not chunks:
         return {
             "answer": (
-                "No content could be found for this document. Please check that the "
-                "document_id is correct and that the document was uploaded successfully."
+                "I couldn't find any information for this document.\n\n"
+                "Please make sure the document was uploaded successfully."
             ),
             "sources": [],
         }
 
     if USE_MOCK_LLM:
-        preview = chunks[0].page_content[:200]
-        answer = (
-            f"[MOCK ANSWER] Based on the document, here's the most relevant excerpt "
-            f"I found: \"{preview}...\" (Real Gemini-generated answers will replace this "
-            f"once AI access is connected.)"
-        )
-    else:
-        from app.services.llm import get_llm
-        llm = get_llm()
+        return {
+            "answer": f"[MOCK]\n\n{chunks[0].page_content[:250]}...",
+            "sources": [],
+        }
 
-        context_text = "\n\n".join([c.page_content for c in chunks])
-        prompt = f"""You are a legal assistant. Answer the question based only on the context below.
-If the answer isn't in the context, say you don't know.
+    from app.services.llm import get_llm
 
-Context:
-{context_text}
+    llm = get_llm()
+    context = "\n\n".join(chunk.page_content for chunk in chunks)
 
-Question: {question}
+    prompt = f"""You are ContractGPT, an AI legal contract assistant.
 
-Answer:"""
+Your job is to explain contracts in SIMPLE English.
 
-        response = llm.invoke(prompt)
-        answer = response.content
+Rules:
+• Never invent information.
+• Answer ONLY from the provided contract.
+• If the answer isn't present, clearly say:
+  "This information is not available in the uploaded contract."
+• Keep answers concise and helpful.
+• Use markdown formatting.
+• Prefer bullet points for lists.
+• Explain legal language in plain English.
+
+Finish every answer with:
+
+---
+⚠️ This is an AI-generated explanation and should not replace professional legal advice.
+
+CONTRACT:
+
+{context}
+
+QUESTION:
+
+{question}
+
+ANSWER:
+"""
+
+    response = llm.invoke(prompt)
+    answer = response.content.strip()
 
     sources = [
-        {"page": c.metadata.get("page_label"), "excerpt": c.page_content[:150]}
-        for c in chunks
+        {
+            "page": chunk.metadata.get("page_label"),
+            "excerpt": chunk.page_content[:180],
+        }
+        for chunk in chunks
     ]
 
     return {"answer": answer, "sources": sources}
 
 
+def _parse_summary_json(raw_output: str) -> dict:
+    cleaned = re.sub(r"^```(?:json)?\s*|\s*```$", "", raw_output.strip()).strip()
+
+    try:
+        parsed = json.loads(cleaned)
+        result = {**DEFAULT_SUMMARY}
+        for key in DEFAULT_SUMMARY:
+            if key in parsed:
+                result[key] = parsed[key]
+        if isinstance(result["risk_score"], str):
+            try:
+                result["risk_score"] = int(re.search(r"\d+", result["risk_score"]).group())
+            except (AttributeError, ValueError):
+                result["risk_score"] = 50
+        result["risk_score"] = max(0, min(100, int(result["risk_score"] or 0)))
+        return result
+    except json.JSONDecodeError as e:
+        logger.warning("JSON parsing failed: %s", e)
+        return {
+            **DEFAULT_SUMMARY,
+            "summary": raw_output,
+        }
+
+
 def summarize_document(document_id: str):
-    """
-    Retrieves all chunks for a document and generates a structured summary:
-    overview, key terms, and risky clauses.
-    """
     try:
         vector_store = get_vector_store(collection_name=document_id)
         all_data = vector_store.get()
         documents = all_data.get("documents", [])
     except Exception as e:
-        print(f"[WARNING] Could not retrieve document for summary: {e}")
+        logger.warning("Summary retrieval failed for %s: %s", document_id, e)
         documents = []
 
     if not documents:
         return {
-            "summary": (
-                "No content could be found for this document. Please check that the "
-                "document_id is correct and that the document was uploaded successfully."
-            ),
-            "key_terms": [],
-            "risky_clauses": [],
+            **DEFAULT_SUMMARY,
+            "summary": "No document content found.",
         }
 
     full_text = "\n\n".join(documents)
 
     if USE_MOCK_LLM:
         return {
-            "summary": (
-                f"[MOCK SUMMARY] This document contains {len(documents)} chunks of text. "
-                f"A real Gemini-generated summary will appear here once AI access is connected. "
-                f"Preview of content: \"{full_text[:200]}...\""
-            ),
-            "key_terms": ["[MOCK] Term extraction pending Gemini connection"],
-            "risky_clauses": ["[MOCK] Risk detection pending Gemini connection"],
+            **DEFAULT_SUMMARY,
+            "summary": "[MOCK] Contract summary.",
+            "key_terms": ["Party obligations", "Payment schedule", "Termination notice"],
+            "risky_clauses": ["Auto-renewal clause without opt-out window"],
+            "payment_terms": ["Monthly payment due on the 1st"],
+            "risk_score": 35,
         }
 
     from app.services.llm import get_llm
+
     llm = get_llm()
 
-    prompt = f"""You are a legal assistant analyzing a contract. Based on the document text below, respond with ONLY a valid JSON object (no markdown formatting, no code fences, no extra text) in exactly this structure:
+    prompt = f"""You are ContractGPT, an expert legal contract analyst.
+
+Analyze this contract and return ONLY valid JSON (no markdown, no code fences).
+
+Use exactly this structure:
 
 {{
-  "summary": "A clear, plain-English summary of what this document is and what it covers (3-5 sentences)",
-  "key_terms": ["term or obligation 1", "term or obligation 2", "..."],
-  "risky_clauses": ["risky clause description 1", "risky clause description 2", "..."]
+  "summary": "Executive summary in 4-6 sentences, plain English.",
+  "key_terms": ["Important term 1", "Important term 2"],
+  "risky_clauses": ["Risky clause description 1", "Risky clause description 2"],
+  "payment_terms": ["Payment detail 1", "Payment detail 2"],
+  "obligations": ["Party obligation 1", "Party obligation 2"],
+  "responsibilities": ["Responsibility 1", "Responsibility 2"],
+  "liability": ["Liability point 1", "Liability point 2"],
+  "termination": ["Termination condition 1"],
+  "renewal": ["Renewal condition 1"],
+  "timeline": ["Key date or milestone 1", "Key date or milestone 2"],
+  "risk_score": 45
 }}
 
-Each item in key_terms and risky_clauses should be a complete, self-contained description (do not split a single clause across multiple list items just because it contains commas internally).
+Rules:
+• risk_score is 0-100 (0=very safe, 100=very risky).
+• Use empty arrays [] if a section is not found in the contract.
+• Never invent information not present in the contract.
+• Each array item should be a complete, readable sentence.
 
-Document text:
-{full_text[:8000]}
+CONTRACT:
+
+{full_text[:45000]}
 """
 
     response = llm.invoke(prompt)
-    raw_output = response.content.strip()
-
-    # Strip markdown code fences if Gemini wraps the JSON in ```json ... ```
-    raw_output = re.sub(r"^```(?:json)?\s*|\s*```$", "", raw_output.strip())
-
-    try:
-        parsed = json.loads(raw_output)
-        summary_text = parsed.get("summary", "")
-        key_terms = parsed.get("key_terms", [])
-        risky_clauses = parsed.get("risky_clauses", [])
-    except json.JSONDecodeError as e:
-        print(f"[WARNING] Failed to parse Gemini's JSON response: {e}")
-        # Fallback: return raw text so nothing is silently lost
-        summary_text = raw_output
-        key_terms = []
-        risky_clauses = []
-
-    return {
-        "summary": summary_text,
-        "key_terms": key_terms,
-        "risky_clauses": risky_clauses,
-    }
+    return _parse_summary_json(response.content)
 
 
-    full_text = "\n\n".join(documents)
-
-    if USE_MOCK_LLM:
-        return {
-            "summary": (
-                f"[MOCK SUMMARY] This document contains {len(documents)} chunks of text. "
-                f"A real Gemini-generated summary will appear here once AI access is connected. "
-                f"Preview of content: \"{full_text[:200]}...\""
-            ),
-            "key_terms": ["[MOCK] Term extraction pending Gemini connection"],
-            "risky_clauses": ["[MOCK] Risk detection pending Gemini connection"],
-        }
+def explain_clause_text(clause_text: str) -> dict:
+    """
+    Explains a standalone contract clause in plain English using Gemini.
+    """
+    if not clause_text.strip():
+        return {"explanation": "Please provide a valid clause to explain."}
 
     from app.services.llm import get_llm
-    llm = get_llm()
+    llm = get_llm(temperature=0.2)
 
-    prompt = f"""You are a legal assistant analyzing a contract. Based on the document text below, provide:
+    prompt = f"""You are ContractGPT, an expert legal assistant.
 
-1. SUMMARY: A clear, plain-English summary of what this document is and what it covers (3-5 sentences).
-2. KEY TERMS: A list of important defined terms, obligations, dates, or amounts mentioned.
-3. RISKY CLAUSES: A list of any clauses that could be risky, unfavorable, or worth extra attention (e.g. liability limits, termination conditions, penalties, auto-renewal clauses).
+Explain the following contract clause in SIMPLE, plain English.
 
-Document text:
-{full_text[:8000]}
+Provide your output in a clear structure:
+1. Executive Explanation (2-3 sentences explaining what this clause means in practice)
+2. Key Obligations & Rights (Bullet points)
+3. Potential Risks or Things to Watch Out For (Bullet points)
 
-Respond in this exact format:
-SUMMARY: <your summary>
-KEY TERMS: <comma-separated list>
-RISKY CLAUSES: <comma-separated list>
+CLAUSE:
+\"\"\"
+{clause_text}
+\"\"\"
 """
-
     response = llm.invoke(prompt)
-    raw_output = response.content
+    return {"explanation": response.content.strip()}
 
-    # Basic parsing of the structured response
-    summary_text = raw_output
-    key_terms = []
-    risky_clauses = []
 
-    if "KEY TERMS:" in raw_output:
-        parts = raw_output.split("KEY TERMS:")
-        summary_text = parts[0].replace("SUMMARY:", "").strip()
-        rest = parts[1]
+def compare_documents(doc1_id: str, doc2_id: str) -> dict:
+    """
+    Compares two contracts stored in ChromaDB collections.
+    """
+    try:
+        store1 = get_vector_store(collection_name=doc1_id).get()
+        text1 = "\n\n".join(store1.get("documents", []))[:20000]
+    except Exception:
+        text1 = "Document 1 content not found."
 
-        if "RISKY CLAUSES:" in rest:
-            terms_part, risky_part = rest.split("RISKY CLAUSES:")
-            key_terms = [t.strip() for t in terms_part.split(",") if t.strip()]
-            risky_clauses = [r.strip() for r in risky_part.split(",") if r.strip()]
-        else:
-            key_terms = [t.strip() for t in rest.split(",") if t.strip()]
+    try:
+        store2 = get_vector_store(collection_name=doc2_id).get()
+        text2 = "\n\n".join(store2.get("documents", []))[:20000]
+    except Exception:
+        text2 = "Document 2 content not found."
 
-    return {
-        "summary": summary_text,
-        "key_terms": key_terms,
-        "risky_clauses": risky_clauses,
-    }
+    from app.services.llm import get_llm
+    llm = get_llm(temperature=0.2)
+
+    prompt = f"""You are ContractGPT, an expert legal analyst.
+
+Compare these two legal contracts and return ONLY valid JSON matching this schema:
+
+{{
+  "doc1_risk": "Low/Medium/High",
+  "doc2_risk": "Low/Medium/High",
+  "comparison_summary": "Overall summary comparing both contracts in plain English.",
+  "differences": [
+    {{ "category": "Payment / Compensation", "doc1": "Details for Doc 1", "doc2": "Details for Doc 2" }},
+    {{ "category": "Termination / Notice", "doc1": "Details for Doc 1", "doc2": "Details for Doc 2" }},
+    {{ "category": "Liability / Indemnity", "doc1": "Details for Doc 1", "doc2": "Details for Doc 2" }}
+  ],
+  "recommendation": "Which contract is more favorable and why."
+}}
+
+CONTRACT 1:
+{text1}
+
+CONTRACT 2:
+{text2}
+"""
+    response = llm.invoke(prompt)
+    cleaned = re.sub(r"^```(?:json)?\s*|\s*```$", "", response.content.strip()).strip()
+    try:
+        return json.loads(cleaned)
+    except Exception:
+        return {
+            "doc1_risk": "Medium",
+            "doc2_risk": "Medium",
+            "comparison_summary": response.content.strip(),
+            "differences": [],
+            "recommendation": "Review both documents carefully."
+        }
+
