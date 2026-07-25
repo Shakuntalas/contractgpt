@@ -6,7 +6,6 @@ import traceback
 from fastapi import APIRouter, UploadFile, File, HTTPException
 
 from app.services.pdf_loader import load_and_split_pdf
-from app.services.vector_store import store_chunks
 
 logger = logging.getLogger(__name__)
 
@@ -97,8 +96,11 @@ async def upload_document(file: UploadFile = File(...)):
             detail="PDF appears to be empty or unreadable."
         )
 
-    # Create embeddings and store in Chroma
+        # Create embeddings and store in Chroma
     try:
+        # Import only when a PDF upload needs embeddings.
+        # Keeps heavy ML/vector dependencies out of server startup.
+        from app.services.vector_store import store_chunks
 
         print("\n========== EMBEDDING START ==========")
         print("Attempting to embed", len(chunks), "chunks")
