@@ -84,7 +84,11 @@ function Summary() {
     }
   };
 
-  useEffect(() => { loadReport(); }, [documentId]);
+  useEffect(() => {
+  if (documentId) {
+    setLoading(false);
+  }
+}, [documentId]);
 
   if (!documentId) {
     return (
@@ -109,18 +113,55 @@ function Summary() {
     );
   }
 
-  if (error || !report) {
-    return (
-      <div className="page-content min-h-[80vh] flex items-center justify-center px-4">
-        <GlassCard className="p-12 text-center max-w-lg" hover={false}>
-          <FaExclamationTriangle className="text-5xl text-amber-400 mx-auto mb-4" />
-          <h2 className="text-xl font-bold mb-2">Summary Failed</h2>
-          <p className="text-slate-400 mb-6">{error || "No report found."}</p>
-          <button onClick={loadReport} className="btn-primary"><FaRedo /> Retry</button>
-        </GlassCard>
-      </div>
-    );
-  }
+ if (error) {
+  return (
+    <div className="page-content min-h-[80vh] flex items-center justify-center px-4">
+      <GlassCard className="p-12 text-center max-w-lg" hover={false}>
+        <FaExclamationTriangle className="text-5xl text-amber-400 mx-auto mb-4" />
+
+        <h2 className="text-xl font-bold mb-2">
+          Summary Failed
+        </h2>
+
+        <p className="text-slate-400 mb-6">
+          {error}
+        </p>
+
+        <button
+          onClick={loadReport}
+          className="btn-primary"
+        >
+          <FaRedo /> Retry
+        </button>
+      </GlassCard>
+    </div>
+  );
+}
+
+if (!report) {
+  return (
+    <div className="page-content min-h-[80vh] flex items-center justify-center px-4">
+      <GlassCard className="p-12 text-center max-w-lg" hover={false}>
+        <FaFilePdf className="text-6xl text-indigo-400 mx-auto mb-6" />
+
+        <h2 className="text-2xl font-bold mb-3">
+          Generate AI Summary
+        </h2>
+
+        <p className="text-slate-400 mb-6">
+          Click below to generate the AI summary.
+        </p>
+
+        <button
+          onClick={loadReport}
+          className="btn-primary"
+        >
+          Generate Summary
+        </button>
+      </GlassCard>
+    </div>
+  );
+}
 
   const handleCopy = async () => {
     const ok = await copyToClipboard(buildSummaryText(report));

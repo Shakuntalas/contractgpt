@@ -32,9 +32,10 @@ function RiskHeatmap() {
   };
 
   useEffect(() => {
-    loadData();
-  }, [documentId]);
-
+  if (documentId) {
+    setLoading(false);
+  }
+}, [documentId]);
   if (!documentId) {
     return (
       <div className="page-content min-h-[80vh] flex items-center justify-center px-4">
@@ -100,7 +101,15 @@ function RiskHeatmap() {
             </GlassCard>
           </div>
 
-          <div className="grid gap-6 mb-8">
+          <div className="mb-6">
+  <button
+    onClick={loadData}
+    className="btn-primary"
+  >
+    Generate Risk Analysis
+  </button>
+</div>
+<div className="grid gap-6 mb-8">
             {riskyClauses.length > 0 ? (
               riskyClauses.map((clause, index) => (
                 <GlassCard key={index} className="p-6 border-l-4 border-l-red-500" hover={false}>

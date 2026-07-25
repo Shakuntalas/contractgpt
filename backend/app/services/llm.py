@@ -1,16 +1,18 @@
 import os
-from langchain_google_genai import ChatGoogleGenerativeAI
-from app.config import GOOGLE_API_KEY
+from dotenv import load_dotenv
+from langchain_groq import ChatGroq
+
+load_dotenv()
 
 
 def get_llm(temperature: float = 0.2):
-    """
-    Returns a Gemini chat model instance.
-    Low temperature (0.2) keeps answers precise and factual.
-    """
-    model_name = os.getenv("GEMINI_MODEL", "models/gemini-3.6-flash")
-    return ChatGoogleGenerativeAI(
-        model=model_name,
-        google_api_key=GOOGLE_API_KEY,
+    groq_api_key = os.getenv("GROQ_API_KEY")
+
+    if not groq_api_key:
+        raise ValueError("GROQ_API_KEY is missing from the .env file.")
+
+    return ChatGroq(
+        model="llama-3.3-70b-versatile",
+        api_key=groq_api_key,
         temperature=temperature,
     )

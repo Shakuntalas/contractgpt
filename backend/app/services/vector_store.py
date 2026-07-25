@@ -1,23 +1,16 @@
-import os
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
-
-from app.config import GOOGLE_API_KEY
 
 PERSIST_DIR = "vectorstore"
 
-EMBED_MODEL = os.getenv("GEMINI_EMBED_MODEL", "models/gemini-embedding-001")
-
-embeddings = GoogleGenerativeAIEmbeddings(
-    model=EMBED_MODEL,
-    google_api_key=GOOGLE_API_KEY,
+embeddings = HuggingFaceEmbeddings(
+    model_name="sentence-transformers/all-MiniLM-L6-v2"
 )
 
 
 def get_vector_store(collection_name: str):
     """
-    Returns a Chroma vector store scoped to a specific document (by collection_name).
-    We use document_id as the collection name so each document's chunks stay isolated.
+    Returns a Chroma vector store scoped to a specific document.
     """
     return Chroma(
         collection_name=collection_name,
@@ -28,7 +21,8 @@ def get_vector_store(collection_name: str):
 
 def store_chunks(document_id: str, chunks):
     """
-    Embeds and stores a document's chunks in its own Chroma collection.
+    Embeds and stores document chunks locally.
+    No Gemini embedding API is used here.
     """
     vector_store = get_vector_store(collection_name=document_id)
     vector_store.add_documents(chunks)

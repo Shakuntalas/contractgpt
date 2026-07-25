@@ -1,9 +1,12 @@
 import os
 from dotenv import load_dotenv
 
-load_dotenv()  # reads variables from .env
+load_dotenv()
 
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
-if not GOOGLE_API_KEY:
-    raise ValueError("GOOGLE_API_KEY is not set. Please add it to your .env file.")
+if not GROQ_API_KEY:
+    raise ValueError(
+        "GROQ_API_KEY is not set. Please add it to your .env file."
+    )
