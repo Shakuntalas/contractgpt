@@ -1,7 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, field_validator
 
-from app.services.rag_chain import answer_question
 
 router = APIRouter()
 
@@ -15,15 +14,35 @@ class ChatRequest(BaseModel):
     def question_must_not_be_empty(cls, v):
         if not v.strip():
             raise ValueError("Question cannot be empty.")
+
         return v
 
 
 @router.post("/chat")
 async def chat_with_document(request: ChatRequest):
+    """
+    Answer a question about an uploaded contract.
+
+    The RAG chain is imported only when the chat endpoint
+    is called. This prevents AI dependencies from slowing
+    FastAPI startup on Render.
+    """
+
     try:
-        result = answer_question(request.document_id, request.question)
+
+        from app.services.rag_chain import answer_question
+
+        result = answer_question(
+            request.document_id,
+            request.question,
+        )
+
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to answer question: {str(e)}")
+
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to answer question: {str(e)}",
+        )
 
     return {
         "document_id": request.document_id,

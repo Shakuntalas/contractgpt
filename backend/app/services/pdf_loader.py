@@ -1,28 +1,24 @@
 import re
-from langchain_community.document_loaders import PyPDFLoader
-from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 
 def clean_text(text: str) -> str:
     """
-    Cleans up common PDF-extraction artifacts:
-    - collapses weird internal spacing (e.g. 'AGRE EM ENT' -> 'AGREEMENT' is NOT safely
-      reversible, so we only fix spacing around punctuation and excess whitespace)
-    - normalizes multiple spaces/newlines into single spaces
+    Clean common PDF extraction artifacts.
     """
-    # Collapse multiple spaces/tabs into one
+
+    # Collapse multiple spaces/tabs
     text = re.sub(r"[ \t]+", " ", text)
 
-    # Collapse multiple newlines into a single newline
+    # Collapse multiple newlines
     text = re.sub(r"\n{2,}", "\n", text)
 
-    # Fix space before punctuation (e.g. "agreement ." -> "agreement.")
+    # Remove spaces before punctuation
     text = re.sub(r"\s+([.,;:)])", r"\1", text)
 
-    # Fix space after opening parenthesis (e.g. "( the" -> "(the")
+    # Remove spaces after opening parenthesis
     text = re.sub(r"([(])\s+", r"\1", text)
 
-    # Strip leading/trailing whitespace on each line, then rejoin
+    # Clean individual lines
     lines = [line.strip() for line in text.split("\n")]
     text = "\n".join(line for line in lines if line)
 
@@ -31,24 +27,42 @@ def clean_text(text: str) -> str:
 
 def load_and_split_pdf(file_path: str):
     """
-    Loads a PDF from disk, cleans the text, and splits it into overlapping chunks.
-    Returns a list of LangChain Document objects.
+    Load a PDF, clean its text, and split it into chunks.
+
+    Heavy LangChain dependencies are imported only when
+    a PDF is uploaded. This keeps FastAPI startup lightweight.
     """
+
+    from langchain_community.document_loaders import PyPDFLoader
+    from langchain_text_splitters import RecursiveCharacterTextSplitter
+
     loader = PyPDFLoader(file_path)
-    pages = loader.load()  # one Document per PDF page
+
+    pages = loader.load()
+
     total_pages = len(pages)
 
-    # Clean each page's text before chunking and enrich metadata
+    # Clean text and add metadata
     for i, page in enumerate(pages):
+
         page.page_content = clean_text(page.page_content)
+
         page.metadata["total_pages"] = total_pages
         page.metadata["page_label"] = i + 1
 
+    # Split document into chunks
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=1000,
         chunk_overlap=150,
-        separators=["\n\n", "\n", ".", " ", ""],
+        separators=[
+            "\n\n",
+            "\n",
+            ".",
+            " ",
+            "",
+        ],
     )
 
     chunks = splitter.split_documents(pages)
+
     return chunks
