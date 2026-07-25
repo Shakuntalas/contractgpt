@@ -1,16 +1,36 @@
-const BASE_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api";
+const BASE_URL =
+  import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api";
+
+const ACCESS_CODE = import.meta.env.VITE_APP_ACCESS_CODE;
+
+function getHeaders(includeJson = false) {
+  const headers = {
+    "X-Access-Code": ACCESS_CODE || "",
+  };
+
+  if (includeJson) {
+    headers["Content-Type"] = "application/json";
+  }
+
+  return headers;
+}
 
 async function handleResponse(response) {
   if (!response.ok) {
     let detail = "Request failed";
+
     try {
       const err = await response.json();
       detail = err.detail || detail;
     } catch {
       /* ignore */
     }
-    throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
+
+    throw new Error(
+      typeof detail === "string" ? detail : JSON.stringify(detail)
+    );
   }
+
   return response.json();
 }
 
@@ -22,49 +42,70 @@ export async function uploadContract(file, onProgress) {
 
   const response = await fetch(`${BASE_URL}/upload`, {
     method: "POST",
+    headers: getHeaders(),
     body: formData,
   });
 
   if (onProgress) onProgress(80);
+
   const data = await handleResponse(response);
+
   if (onProgress) onProgress(100);
+
   return data;
 }
 
 export async function chatWithContract(documentId, question) {
   const response = await fetch(`${BASE_URL}/chat`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ document_id: documentId, question }),
+    headers: getHeaders(true),
+    body: JSON.stringify({
+      document_id: documentId,
+      question,
+    }),
   });
+
   return handleResponse(response);
 }
 
 export async function getSummary(documentId) {
-  const response = await fetch(`${BASE_URL}/summary/${documentId}`);
+  const response = await fetch(
+    `${BASE_URL}/summary/${documentId}`,
+    {
+      headers: getHeaders(),
+    }
+  );
+
   return handleResponse(response);
 }
 
 export async function compareContracts(doc1_id, doc2_id) {
   const response = await fetch(`${BASE_URL}/compare`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ doc1_id, doc2_id }),
+    headers: getHeaders(true),
+    body: JSON.stringify({
+      doc1_id,
+      doc2_id,
+    }),
   });
+
   return handleResponse(response);
 }
 
 export async function explainClauseApi(clause) {
   const response = await fetch(`${BASE_URL}/explain-clause`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: getHeaders(true),
     body: JSON.stringify({ clause }),
   });
+
   return handleResponse(response);
 }
 
 export async function pingBackend() {
   const base = BASE_URL.replace("/api", "");
+
   const response = await fetch(`${base}/ping`);
+
   return handleResponse(response);
 }

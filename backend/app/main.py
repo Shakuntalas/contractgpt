@@ -3,8 +3,10 @@ import time
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from app.api import upload, chat, summary, compare, explain
+from app.config import APP_ACCESS_CODE
 
 logging.basicConfig(
     level=logging.INFO,
@@ -33,11 +35,44 @@ app.add_middleware(
 
 
 @app.middleware("http")
+async def protect_api(request: Request, call_next):
+
+    # Protect every ContractGPT API endpoint
+    if request.url.path.startswith("/api/") and request.method != "OPTIONS":
+
+        access_code = request.headers.get("X-Access-Code")
+
+        if not APP_ACCESS_CODE:
+            return JSONResponse(
+                status_code=500,
+                content={"detail": "Server access code is not configured."},
+            )
+
+        if access_code != APP_ACCESS_CODE:
+            return JSONResponse(
+                status_code=401,
+                content={"detail": "Invalid or missing access code."},
+            )
+
+    return await call_next(request)
+
+
+@app.middleware("http")
 async def log_requests(request: Request, call_next):
     start = time.perf_counter()
+
     response = await call_next(request)
+
     duration_ms = (time.perf_counter() - start) * 1000
-    logger.info("%s %s -> %s (%.1fms)", request.method, request.url.path, response.status_code, duration_ms)
+
+    logger.info(
+        "%s %s -> %s (%.1fms)",
+        request.method,
+        request.url.path,
+        response.status_code,
+        duration_ms,
+    )
+
     return response
 
 
@@ -50,7 +85,10 @@ app.include_router(explain.router, prefix="/api", tags=["Explain"])
 
 @app.get("/")
 def read_root():
-    return {"message": "ContractGPT is running", "version": "2.0.0"}
+    return {
+        "message": "ContractGPT is running",
+        "version": "2.0.0",
+    }
 
 
 @app.get("/ping")
