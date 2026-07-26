@@ -12,6 +12,7 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
 )
+
 logger = logging.getLogger("contractgpt")
 
 app = FastAPI(
@@ -19,44 +20,6 @@ app = FastAPI(
     description="AI-powered legal contract assistant",
     version="2.0.0",
 )
-
-# Allowed frontend websites
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        "https://contractgpt.onrender.com",
-        "http://localhost:5173",
-        "http://localhost:5174",
-        "http://127.0.0.1:5173",
-        "http://127.0.0.1:5174",
-    ],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-
-@app.middleware("http")
-async def protect_api(request: Request, call_next):
-
-    # Allow browser CORS preflight requests
-    if request.url.path.startswith("/api/") and request.method != "OPTIONS":
-
-        access_code = request.headers.get("X-Access-Code")
-
-        if not APP_ACCESS_CODE:
-            return JSONResponse(
-                status_code=500,
-                content={"detail": "Server access code is not configured."},
-            )
-
-        if access_code != APP_ACCESS_CODE:
-            return JSONResponse(
-                status_code=401,
-                content={"detail": "Invalid or missing access code."},
-            )
-
-    return await call_next(request)
 
 
 @app.middleware("http")
@@ -76,6 +39,48 @@ async def log_requests(request: Request, call_next):
     )
 
     return response
+
+
+@app.middleware("http")
+async def protect_api(request: Request, call_next):
+
+    # Browser CORS preflight must pass without authentication
+    if request.method == "OPTIONS":
+        return await call_next(request)
+
+    if request.url.path.startswith("/api/"):
+
+        access_code = request.headers.get("X-Access-Code")
+
+        if not APP_ACCESS_CODE:
+            return JSONResponse(
+                status_code=500,
+                content={"detail": "Server access code is not configured."},
+            )
+
+        if access_code != APP_ACCESS_CODE:
+            return JSONResponse(
+                status_code=401,
+                content={"detail": "Invalid or missing access code."},
+            )
+
+    return await call_next(request)
+
+
+# Add CORS LAST so it wraps the complete application.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "https://contractgpt.onrender.com",
+        "http://localhost:5173",
+        "http://localhost:5174",
+        "http://127.0.0.1:5173",
+        "http://127.0.0.1:5174",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 app.include_router(upload.router, prefix="/api", tags=["Upload"])
