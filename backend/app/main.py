@@ -20,9 +20,11 @@ app = FastAPI(
     version="2.0.0",
 )
 
+# Allowed frontend websites
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
+        "https://contractgpt.onrender.com",
         "http://localhost:5173",
         "http://localhost:5174",
         "http://127.0.0.1:5173",
@@ -37,7 +39,7 @@ app.add_middleware(
 @app.middleware("http")
 async def protect_api(request: Request, call_next):
 
-    # Protect every ContractGPT API endpoint
+    # Allow browser CORS preflight requests
     if request.url.path.startswith("/api/") and request.method != "OPTIONS":
 
         access_code = request.headers.get("X-Access-Code")
